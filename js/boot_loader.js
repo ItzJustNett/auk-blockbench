@@ -9,6 +9,7 @@ import { initializeDesktopApp, loadOpenWithBlockbenchFile } from "./desktop";
 import { AutoBackup } from "./auto_backup";
 import { initReferenceImages } from "./preview/reference_images";
 import { initCanvas } from "./preview/canvas";
+import { loadAukPlugins } from "./auk/index.js";
 
 Interface.page_wrapper = document.getElementById('page_wrapper');
 Interface.work_screen = document.getElementById('work_screen');
@@ -170,6 +171,7 @@ localStorage.setItem('last_version', Blockbench.version);
 		}
 		proceeded = true;
 	}
+	loadAukPlugins();
 	loadInstalledPlugins().then(proceed);
 	let timeout = ExperimentalSettings.get('plugin_await_loading_timeout') ?? 2;
 	setTimeout(proceed, timeout * 1000);
