@@ -503,6 +503,10 @@ onVueSetup(async function() {
 											<span class="icon_wrapper f_left"><i class="material-icons">menu_book</i></span>
 											<label>Blockbench Wiki</label>
 										</li>
+										<li class="format_entry start_screen_link" @click="openLink('https://github.com/ItzJustNett/auk-blockbench')" title="Auk edition of Blockbench, GPL-3.0. Not the official Blockbench.">
+											<span class="icon_wrapper f_left"><i class="material-icons">code</i></span>
+											<label>Based on Blockbench · Source</label>
+										</li>
 									</ul>
 								</li>
 							</ul>
