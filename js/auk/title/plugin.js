@@ -603,15 +603,31 @@ const render_component = {
 function showCharacters(font_id) {
 	let font = AukFonts[font_id] || AukFonts.block;
 	let chars = fontCharacters(font);
+	let content = document.createElement('div');
+	let description = document.createElement('p');
+	description.textContent = font.description;
+	let list = document.createElement('p');
+	list.className = 'auk_chars';
+	list.textContent = chars.join(' ');
+	content.append(description, list);
 	new Dialog({
 		id: 'auk_title_characters',
 		title: `${font.name}: characters`,
 		width: 520,
-		lines: [`<p>${font.description}</p><p class="auk_chars">${chars.map(c => c.replace('<', '&lt;').replace('>', '&gt;')).join(' ')}</p>`],
-		buttons: ['Add a row with all of them', 'dialog.close'],
+		lines: [content],
+		buttons: ['Add rows with all of them', 'dialog.close'],
 		cancelIndex: 1,
 		onButton(index) {
-			if (index == 0) addRow('title', chars.join(''), {font: font.id});
+			if (index != 0) return;
+			editTitle('Add character rows', () => {
+				for (let i = 0; i < chars.length; i += 32) {
+					let cfg = Object.assign(defaultRow('title', chars.slice(i, i + 32).join('')), {font: font.id, size: 0.5});
+					let group = new Group({name: rowName(cfg), origin: [0, 0, 0]}).init();
+					group.auk_text = cfg;
+					group.addTo();
+				}
+			});
+			positionCamera();
 		}
 	}).show();
 }

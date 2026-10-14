@@ -188,7 +188,7 @@ export const AukFonts = {
 		height: 8,
 		spacing: 1,
 		space: 3,
-		glyphs: Object.assign({З: BLOCK['3']}, BLOCK),
+		glyphs: Object.assign({}, BLOCK, {З: BLOCK['3']}),
 	},
 	pixel: {
 		id: 'pixel',
