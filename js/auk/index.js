@@ -1,4 +1,3 @@
-// Auk's built-in plugins. They ship with the app and are loaded at startup (see AUK.md).
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { setupSaveToAuk } from './save_to_auk.js';

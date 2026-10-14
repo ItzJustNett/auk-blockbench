@@ -1,5 +1,3 @@
-// Auk Title builder: turns one text row's settings into block geometry (rectangles of glyph
-// pixels) and a texture atlas. Pure functions, no Blockbench state, so they can be tested alone.
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { AukFonts, glyphFor } from './fonts.js';
@@ -27,7 +25,7 @@ export function defaultRow(type = 'title', text = 'AUK') {
 		font: 'block',
 		size: 1,
 		depth: 4,
-		spacing: null, // null: the font's own spacing
+		spacing: null,
 		space: null,
 		offset_x: 0,
 		offset_y: 0,
@@ -51,7 +49,6 @@ export function defaultRow(type = 'title', text = 'AUK') {
 	}, TEXT_TYPES[type]?.defaults || {});
 }
 
-/** Glyph-pixel mask of a row of text, with `margin` empty cells around it. */
 export function layoutText(text, font, spacing, space, margin) {
 	let glyphs = [];
 	let width = 0;
@@ -79,7 +76,6 @@ export function layoutText(text, font, spacing, space, margin) {
 	return {w, h, cells, empty: glyphs.length == 0};
 }
 
-/** Grow a mask by `size` cells in every direction (square brush). */
 export function dilate(mask, size) {
 	let {w, h, cells} = mask;
 	let out = new Uint8Array(w * h);
@@ -97,7 +93,6 @@ export function dilate(mask, size) {
 	return {w, h, cells: out};
 }
 
-/** Cover the filled cells with as few rectangles as a greedy scan finds. */
 export function mergeRects(mask) {
 	let {w, h, cells} = mask;
 	let done = new Uint8Array(w * h);
@@ -123,19 +118,10 @@ export function mergeRects(mask) {
 const MAX_ATLAS = 4096;
 export const MAX_TEXT_LENGTH = 80;
 
-/** A finite number within [min, max], or the fallback (inputs can hand over '' or NaN). */
 export function num(value, fallback, min = -Infinity, max = Infinity) {
 	return Number.isFinite(value) ? Math.min(max, Math.max(min, value)) : fallback;
 }
 
-/**
- * Build one row: geometry in glyph-pixel cells plus a texture atlas (RGBA pixels).
- * Atlas layout, R texels per cell, D texels for the depth:
- *   front    (0, 0)            the text's front faces, one R×R block per cell
- *   h bands  (0, h*R)          per cell row, a D tall strip: top/bottom faces, depth runs down
- *   v bands  (0, h*R + h*D)    per cell column, a D wide strip: left/right faces, depth runs right
- *   border   (w*R, 0)          a small solid patch for the outline blocks
- */
 export function buildRow(cfg) {
 	let font = AukFonts[cfg.font] || AukFonts.block;
 	let margin = cfg.outline ? Math.round(num(cfg.outline_size, 1, 1, 3)) : 0;
@@ -173,7 +159,6 @@ export function buildRow(cfg) {
 	let scale = 8 / R;
 	let filled = (x, y) => x >= 0 && y >= 0 && x < w && y < h && mask.cells[y * w + x] == 1;
 
-	// colour of the text's surface at a front texel (before bevel)
 	function surface(tx, ty) {
 		let mx = Math.floor(tx * scale), my = Math.floor(ty * scale);
 		let v = Math.min(1, Math.max(0, (ty / R - margin) / font.height));
@@ -190,7 +175,6 @@ export function buildRow(cfg) {
 		pixels[i] = c[0]; pixels[i + 1] = c[1]; pixels[i + 2] = c[2]; pixels[i + 3] = 255;
 	}
 
-	// front faces, with a bevel: light on top/left edges, dark on bottom/right edges
 	let bevel = cfg.bevel ? Math.max(1, Math.round(R / 4)) : 0;
 	let strength = num(cfg.bevel_strength, 0.35, 0, 1);
 	for (let ty = 0; ty < h * R; ty++) {
@@ -207,7 +191,7 @@ export function buildRow(cfg) {
 			put(tx, ty, c);
 		}
 	}
-	// side strips: the surface colour darkened, fading towards the border colour with depth
+
 	let side = (c, d) => {
 		c = shade(c, side_shade);
 		return cfg.fade ? mix(c, border, D > 1 ? d / (D - 1) : 1) : c;
@@ -235,7 +219,7 @@ export function buildRow(cfg) {
 		let line = Math.floor(cx / per_line);
 		return [(cx % per_line) * D, vband_y + line * h * R];
 	}
-	// face UVs (in atlas pixels) for a rectangle of text cells
+
 	function textFaces(r) {
 		let x1 = r.x * R, x2 = (r.x + r.w) * R;
 		let top = hband_y + r.y * D;
@@ -245,7 +229,7 @@ export function buildRow(cfg) {
 		return {
 			south: [x1, r.y * R, x2, (r.y + r.h) * R],
 			north: [x2, r.y * R, x1, (r.y + r.h) * R],
-			// depth 0 (the front edge) sits at the start of each strip
+
 			up: [x1, top + D, x2, top],
 			down: [x1, bottom, x2, bottom + D],
 			east: [ex, ey + r.y * R, ex + D, ey + (r.y + r.h) * R],

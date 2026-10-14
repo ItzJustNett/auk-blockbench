@@ -1,5 +1,3 @@
-// Auk Title materials: every texture is generated here from code (noise, cells, stripes),
-// no image assets. Colours are [r, g, b] arrays in 0-255.
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 export function hash(x, y, seed = 0) {
@@ -10,7 +8,7 @@ export function hash(x, y, seed = 0) {
 function smooth(t) {
 	return t * t * (3 - 2 * t);
 }
-/** Value noise in 0-1, continuous over x and y. */
+
 export function valueNoise(x, y, seed = 0) {
 	let x0 = Math.floor(x), y0 = Math.floor(y);
 	let fx = smooth(x - x0), fy = smooth(y - y0);
@@ -44,8 +42,6 @@ function gradient(stops, t) {
 	return mix(stops[i], stops[i + 1], scaled - i);
 }
 
-// Every material is sampled in "material pixels" (mx, my: 8 per block of a glyph, independent of
-// the texture resolution) and gets v: 0 at the top of the text row, 1 at its bottom.
 export const AukMaterials = {
 	stone: {
 		name: 'Stone',
@@ -59,7 +55,7 @@ export const AukMaterials = {
 	cobble: {
 		name: 'Cobble',
 		sample(mx, my) {
-			// jittered cells with dark mortar between them
+
 			let size = 7;
 			let cx = Math.floor(mx / size), cy = Math.floor(my / size);
 			let d1 = 1e9, d2 = 1e9, best = 0;
@@ -105,7 +101,7 @@ export const AukMaterials = {
 	grass: {
 		name: 'Grass and dirt',
 		sample(mx, my, v, row_px) {
-			// green on top (about a block and a bit), dirt below, a ragged edge between
+
 			let edge = 10 + Math.floor(hash(mx >> 1, 0, 51) * 4);
 			let ty = v * row_px * 8;
 			if (ty < edge) {

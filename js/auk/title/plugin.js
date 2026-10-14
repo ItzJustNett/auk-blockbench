@@ -1,5 +1,3 @@
-// Auk Title: a project type for Minecraft-style 3D titles and logos made from text.
-// Our own implementation: fonts, materials and geometry are all Auk's (see AUK.md).
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import { AukFonts, fontCharacters } from './fonts.js';
@@ -8,18 +6,16 @@ import { buildRow, defaultRow, num, MAX_TEXT_LENGTH, TEXT_TYPES } from './builde
 import { AukLink, AukRenderers, saveToAuk, toSquarePNG } from '../save_to_auk.js';
 
 export const FORMAT_ID = 'auk_title';
-const UNIT = 2; // Blockbench units per glyph pixel at size 1
-const ROW_GAP = 1.5; // units between rows
+const UNIT = 2;
+const ROW_GAP = 1.5;
 
 const isTitle = () => !!(Project && Format && Format.id == FORMAT_ID);
 const clone = obj => JSON.parse(JSON.stringify(obj));
 
-// ---------------------------------------------------------------- model
-
 function isRow(node) {
 	return node instanceof Group && node.auk_text && typeof node.auk_text.text == 'string';
 }
-/** Text rows, top to bottom, in outliner order. */
+
 export function titleRows() {
 	let rows = [];
 	let walk = nodes => nodes.forEach(node => {
@@ -56,7 +52,6 @@ function atlasToDataURL(atlas) {
 	return canvas.toDataURL('image/png');
 }
 
-/** Rebuild every row's blocks and texture from its settings, and stack the rows. */
 function regenerate() {
 	let rows = titleRows();
 	let built = rows.map(group => ({group, cfg: group.auk_text, model: buildRow(group.auk_text)}));
@@ -103,7 +98,7 @@ function regenerate() {
 		group.name = rowName(cfg);
 		top -= model.h * s + ROW_GAP;
 	});
-	// textures of rows that are gone
+
 	let used = new Set(rows.map(g => g.auk_text.texture));
 	Texture.all.filter(t => t.name.startsWith('title_row_') && !used.has(t.uuid)).forEach(t => t.remove(true));
 
@@ -111,7 +106,6 @@ function regenerate() {
 	return {cubes, textures, groups: rows};
 }
 
-/** Run a change to the title as one undo step and rebuild the model. */
 export function editTitle(message, change) {
 	let rows = titleRows();
 	Undo.initEdit({
@@ -161,9 +155,6 @@ function moveRow(group, direction) {
 	});
 }
 
-// ---------------------------------------------------------------- camera
-
-/** Bounding box of the title in world space. */
 function titleBox() {
 	let box = new THREE.Box3();
 	titleRows().forEach(group => group.children.forEach(cube => {
@@ -175,13 +166,12 @@ function titleBox() {
 }
 
 export const CameraSettings = {
-	elevation: -10, // degrees; negative looks up at the title from below
+	elevation: -10,
 	yaw: 0,
 	fov: 30,
 	margin: 0.06,
 };
 
-/** Camera position and target that frame the whole title at an aspect ratio. */
 export function titleCamera(aspect, options = CameraSettings) {
 	let box = titleBox();
 	if (box.isEmpty()) return null;
@@ -209,7 +199,7 @@ export function titleCamera(aspect, options = CameraSettings) {
 	let size = box.getSize(new THREE.Vector3()).length();
 	let dist = size;
 	for (let pass = 0; pass < 4; pass++) {
-		// distance: binary search so the projected box just fits
+
 		let lo = size * 0.05, hi = size * 50;
 		for (let i = 0; i < 40; i++) {
 			let mid = (lo + hi) / 2;
@@ -218,7 +208,7 @@ export function titleCamera(aspect, options = CameraSettings) {
 			if (fits) hi = mid; else lo = mid;
 		}
 		dist = hi;
-		// centre the projected box in the frame
+
 		let {min, max} = extent(dist);
 		let half_h = Math.tan(Math.degToRad(options.fov) / 2) * dist;
 		let half_w = half_h * aspect;
@@ -249,20 +239,17 @@ export function positionCamera(preview = Preview.selected) {
 	if (!applyCamera(preview, aspect)) Blockbench.showQuickMessage('Add some text first');
 }
 
-// ---------------------------------------------------------------- rendering
-
 export const RenderSettings = {
 	width: 1600,
 	height: 600,
-	background: 'transparent', // or 'color'
+	background: 'transparent',
 	background_color: '#1e1b26',
 	supersample: 2,
 	shading: true,
-	fit: true, // frame the whole title; off: use the current view
+	fit: true,
 	lock_aspect: false,
 };
 
-/** Resolves once every title texture has finished loading its image. */
 function texturesReady() {
 	let pending = titleRows().map(rowTexture).filter(t => t && t.img && !(t.img.complete && t.img.naturalWidth));
 	return Promise.all(pending.map(t => new Promise(resolve => {
@@ -272,7 +259,6 @@ function texturesReady() {
 	}))).then(() => new Promise(resolve => requestAnimationFrame(resolve)));
 }
 
-/** Render the title to a PNG data URL. */
 export async function renderTitle(options = {}) {
 	await texturesReady();
 	let o = Object.assign({}, RenderSettings, options);
@@ -338,7 +324,6 @@ async function showRender() {
 	}).show();
 }
 
-// "Save to Auk" asks us for title projects
 AukRenderers.title = async ({kind, width, height}) => {
 	if (!isTitle()) return null;
 	if (kind == 'icon') {
@@ -347,8 +332,6 @@ AukRenderers.title = async ({kind, width, height}) => {
 	}
 	return renderTitle({width, height});
 };
-
-// ---------------------------------------------------------------- UI
 
 const CSS = `
 #panel_auk_title_text .auk_rows { list-style: none; margin: 0 0 6px; padding: 0; }
@@ -664,8 +647,6 @@ function newTitleDialog() {
 	}).show();
 }
 
-// ---------------------------------------------------------------- setup
-
 export function setupTitleGenerator() {
 	Blockbench.addCSS(CSS);
 
@@ -787,7 +768,7 @@ export function setupTitleGenerator() {
 		hide_toolbars: true,
 		condition: isTitle,
 		onSelect() {
-			// after the sidebars and toolbars have changed the viewport size
+
 			setTimeout(() => positionCamera(), 50);
 		},
 	});
@@ -799,7 +780,6 @@ export function setupTitleGenerator() {
 		component: render_component,
 	});
 
-	// for scripts and other plugins
 	window.AukTitle = {addRow, editTitle, titleRows, renderTitle, positionCamera, titleCamera, CameraSettings, RenderSettings};
 
 	Blockbench.on('update_selection', () => TitlePanel.load());

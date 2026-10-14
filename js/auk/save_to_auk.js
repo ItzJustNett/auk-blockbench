@@ -1,19 +1,15 @@
-// Save to Auk: when this app runs inside an Auk page (an iframe opened with ?auk_origin=...),
-// render a PNG and hand it to the parent page with postMessage. Never posts to "*".
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-// Origins of Auk pages that may embed the editor.
 const ALLOWED_ORIGINS = [
 	'https://auk-hosting.com',
 	'http://localhost:5173',
 ];
-const ICON_SIZE = 64; // Minecraft's server-icon.png
+const ICON_SIZE = 64;
 
 function isLocalHost(hostname) {
 	return hostname == 'localhost' || hostname == '127.0.0.1' || hostname == '[::1]';
 }
 
-/** The parent's origin if it is allowed, else null. */
 export function resolveAukOrigin(search = location.search, own = location) {
 	let raw;
 	try {
@@ -28,10 +24,10 @@ export function resolveAukOrigin(search = location.search, own = location) {
 	} catch (err) {
 		return null;
 	}
-	// an origin only: no path, query, credentials or fragment
+
 	if (url.origin == 'null' || raw.replace(/\/$/, '') != url.origin) return null;
 	if (ALLOWED_ORIGINS.includes(url.origin)) return url.origin;
-	// development: an app served from localhost may talk to any local http page
+
 	if (isLocalHost(own.hostname) && url.protocol == 'http:' && isLocalHost(url.hostname)) return url.origin;
 	return null;
 }
@@ -42,7 +38,7 @@ export const AukLink = {
 	get available() {
 		return !!(this.embedded && this.origin);
 	},
-	/** Send a PNG (data URL) to the Auk page. */
+
 	sendImage(kind, data_url, width, height) {
 		if (!this.available) throw new Error('Not running inside an Auk page');
 		if (kind != 'title' && kind != 'icon') throw new Error('Unknown image kind: ' + kind);
@@ -58,7 +54,6 @@ export const AukLink = {
 	},
 };
 
-/** Render the current view of a non-title project to a PNG data URL. */
 function renderView(width, height) {
 	return new Promise(resolve => {
 		Screencam.advancedScreenshot(Preview.selected, {
@@ -69,7 +64,7 @@ function renderView(width, height) {
 		}, resolve);
 	});
 }
-/** Scale an image into a square canvas (keeping its aspect ratio, centred). */
+
 export async function toSquarePNG(data_url, size) {
 	let img = new Image();
 	img.src = data_url;
@@ -85,9 +80,8 @@ export async function toSquarePNG(data_url, size) {
 	return canvas.toDataURL('image/png');
 }
 
-// The title generator registers itself here so "Save to Auk" uses its renderer for titles.
 export const AukRenderers = {
-	title: null, // async ({kind, width, height}) => data URL, or null when it does not apply
+	title: null,
 };
 
 async function renderFor(kind, width, height) {

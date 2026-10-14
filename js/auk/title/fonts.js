@@ -1,6 +1,3 @@
-// Auk Title fonts. Every glyph here was drawn for Auk (no third-party font data).
-// Rows go top to bottom, "#" is a filled block. All glyphs of a font have the font's height;
-// widths vary. Letters are capitals only: text is upper-cased before layout.
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 const BLOCK = {
@@ -67,7 +64,7 @@ const BLOCK = {
 	'|': ['##', '##', '##', '##', '##', '##', '##', '##'],
 	'♥': ['.##.##.', '#######', '#######', '#######', '.#####.', '..###..', '...#...', '.......'],
 	'★': ['...#...', '..###..', '#######', '.#####.', '..###..', '.##.##.', '.#...#.', '.......'],
-	// Ukrainian capitals that differ from Latin ones
+
 	Б: ['######', '######', '##....', '#####.', '######', '##..##', '######', '#####.'],
 	Г: ['######', '######', '##....', '##....', '##....', '##....', '##....', '##....'],
 	Ґ: ['....##', '######', '######', '##....', '##....', '##....', '##....', '##....'],
@@ -177,7 +174,6 @@ const PIXEL = {
 	Я: ['#####', '#...#', '#...#', '#####', '..#.#', '.#..#', '#...#'],
 };
 
-// Cyrillic letters that look like Latin ones share the Latin glyph.
 const SHARED = {А: 'A', В: 'B', Е: 'E', І: 'I', К: 'K', М: 'M', Н: 'H', О: 'O', Р: 'P', С: 'C', Т: 'T', Х: 'X'};
 
 export const AukFonts = {
@@ -211,12 +207,10 @@ for (let font of Object.values(AukFonts)) {
 	}
 }
 
-/** Characters a font can draw, in a stable order for the character list. */
 export function fontCharacters(font) {
 	return Object.keys(font.glyphs).filter(c => c != ' ');
 }
 
-/** The glyph for a character (upper-cased), or the font's "?" for unknown characters. */
 export function glyphFor(font, char) {
 	let upper = char.toUpperCase();
 	return font.glyphs[upper] || font.glyphs[char] || font.glyphs['?'];
