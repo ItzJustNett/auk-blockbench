@@ -439,6 +439,12 @@ const panel_component = {
 		showCharacters() {
 			showCharacters(this.row.font);
 		},
+		canSaveToAuk() {
+			return !!(BarItems.save_to_auk && BarItems.save_to_auk.condition && Condition(BarItems.save_to_auk.condition));
+		},
+		saveToAuk() {
+			BarItems.save_to_auk.click();
+		},
 		positionCamera() {
 			positionCamera();
 		},
@@ -453,6 +459,7 @@ const panel_component = {
 			<div class="auk_buttons">
 				<button @click="addRow()"><i class="material-icons icon">add</i> Add text</button>
 				<button @click="positionCamera()"><i class="material-icons icon">auto_mode</i> Position camera</button>
+				<button v-if="canSaveToAuk()" class="auk_save" @click="saveToAuk()"><i class="material-icons icon">cloud_upload</i> Save to Auk</button>
 			</div>
 			<p class="auk_hint" v-if="!row">Select a text row to edit it.</p>
 			<template v-if="row">

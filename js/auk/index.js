@@ -13,4 +13,7 @@ export function loadAukPlugins() {
 			console.error(`[auk] could not load ${id}`, err);
 		}
 	}
+	if (new URLSearchParams(location.search).get('auk_new') == 'title') {
+		setTimeout(() => { if (!Project && Formats.auk_title) Formats.auk_title.new(); }, 400);
+	}
 }
