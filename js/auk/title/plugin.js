@@ -4,7 +4,7 @@
 
 import { AukFonts, fontCharacters } from './fonts.js';
 import { AukMaterials, AukOverlays } from './materials.js';
-import { buildRow, defaultRow, TEXT_TYPES } from './builder.js';
+import { buildRow, defaultRow, num, MAX_TEXT_LENGTH, TEXT_TYPES } from './builder.js';
 import { AukLink, AukRenderers, saveToAuk, toSquarePNG } from '../save_to_auk.js';
 
 export const FORMAT_ID = 'auk_title';
@@ -60,7 +60,7 @@ function atlasToDataURL(atlas) {
 function regenerate() {
 	let rows = titleRows();
 	let built = rows.map(group => ({group, cfg: group.auk_text, model: buildRow(group.auk_text)}));
-	let scales = built.map(b => UNIT * Math.max(0.05, b.cfg.size || 1));
+	let scales = built.map(b => UNIT * num(b.cfg.size, 1, 0.05, 20));
 	let total = built.reduce((sum, b, i) => sum + b.model.h * scales[i], 0) + ROW_GAP * Math.max(0, built.length - 1);
 	let top = total;
 	let cubes = [], textures = [];
@@ -81,9 +81,9 @@ function regenerate() {
 		texture.uv_height = model.atlas.height;
 		textures.push(texture);
 
-		let x0 = -model.w * s / 2 + (cfg.offset_x || 0) * s;
-		let y0 = top + (cfg.offset_y || 0) * s;
-		let depth = Math.max(0.1, cfg.depth) * s;
+		let x0 = -model.w * s / 2 + num(cfg.offset_x, 0, -500, 500) * s;
+		let y0 = top + num(cfg.offset_y, 0, -500, 500) * s;
+		let depth = num(cfg.depth, 1, 0.1, 64) * s;
 		let place = (rect, z1, z2) => ({
 			from: [x0 + rect.x * s, y0 - (rect.y + rect.h) * s, z1],
 			to: [x0 + (rect.x + rect.w) * s, y0 - rect.y * s, z2],
@@ -97,7 +97,7 @@ function regenerate() {
 		};
 		if (!model.empty) {
 			model.text.forEach(part => make('letters', part, -depth, 0));
-			let back = -depth - Math.max(0.5, Math.min(1, cfg.depth)) * s;
+			let back = -depth - num(cfg.depth, 1, 0.5, 1) * s;
 			model.outline.forEach(part => make('outline', part, back, -depth * 0.5));
 		}
 		group.name = rowName(cfg);
@@ -474,7 +474,7 @@ const panel_component = {
 			<p class="auk_hint" v-if="!row">Select a text row to edit it.</p>
 			<template v-if="row">
 				<h4>Text</h4>
-				${field('Text', '<input type="text" class="dark_bordered" v-model="row.text" spellcheck="false">')}
+				${field('Text', `<input type="text" class="dark_bordered" v-model="row.text" maxlength="${MAX_TEXT_LENGTH}" spellcheck="false">`)}
 				<div class="auk_field"><label>Type</label>
 					<select class="dark_bordered" :value="row.type" @change="setType($event.target.value)">
 						<option v-for="(name, id) in types" :value="id">{{ name }}</option>

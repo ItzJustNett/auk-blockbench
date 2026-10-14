@@ -121,6 +121,12 @@ export function mergeRects(mask) {
 }
 
 const MAX_ATLAS = 4096;
+export const MAX_TEXT_LENGTH = 80;
+
+/** A finite number within [min, max], or the fallback (inputs can hand over '' or NaN). */
+export function num(value, fallback, min = -Infinity, max = Infinity) {
+	return Number.isFinite(value) ? Math.min(max, Math.max(min, value)) : fallback;
+}
 
 /**
  * Build one row: geometry in glyph-pixel cells plus a texture atlas (RGBA pixels).
@@ -132,15 +138,16 @@ const MAX_ATLAS = 4096;
  */
 export function buildRow(cfg) {
 	let font = AukFonts[cfg.font] || AukFonts.block;
-	let margin = cfg.outline ? Math.max(1, Math.round(cfg.outline_size || 1)) : 0;
-	let spacing = cfg.spacing ?? font.spacing;
-	let space = cfg.space ?? font.space;
-	let mask = layoutText(cfg.text, font, spacing, space, margin);
+	let margin = cfg.outline ? Math.round(num(cfg.outline_size, 1, 1, 3)) : 0;
+	let spacing = Math.round(num(cfg.spacing, font.spacing, 0, 16));
+	let space = Math.round(num(cfg.space, font.space, 0, 32));
+	let text = Array.from(String(cfg.text ?? '')).slice(0, MAX_TEXT_LENGTH).join('');
+	let mask = layoutText(text, font, spacing, space, margin);
 	let {w, h} = mask;
 
 	let R = [4, 8, 16, 32].includes(cfg.resolution) ? cfg.resolution : 8;
 	while (R > 2 && (w * R + 8 > MAX_ATLAS)) R /= 2;
-	let depth = Math.max(0.1, cfg.depth);
+	let depth = num(cfg.depth, 1, 0.1, 64);
 	let D = Math.max(2, Math.min(64, Math.round(depth * R)));
 	let per_line = Math.max(1, Math.floor((w * R) / D));
 	let lines = Math.ceil(w / per_line);
@@ -160,7 +167,9 @@ export function buildRow(cfg) {
 	let overlay = AukOverlays[cfg.overlay];
 	let tint = hexToRgb(cfg.tint);
 	let border = hexToRgb(cfg.border_color);
-	let side_shade = cfg.side_shade ?? 0.62;
+	let side_shade = num(cfg.side_shade, 0.62, 0, 1);
+	let overlay_opacity = num(cfg.overlay_opacity, 0, 0, 1);
+	let tint_opacity = num(cfg.tint_opacity, 0, 0, 1);
 	let scale = 8 / R;
 	let filled = (x, y) => x >= 0 && y >= 0 && x < w && y < h && mask.cells[y * w + x] == 1;
 
@@ -169,10 +178,10 @@ export function buildRow(cfg) {
 		let mx = Math.floor(tx * scale), my = Math.floor(ty * scale);
 		let v = Math.min(1, Math.max(0, (ty / R - margin) / font.height));
 		let c = material.sample(mx, my, v, font.height, cfg);
-		if (overlay && overlay.apply && cfg.overlay_opacity > 0) {
-			c = mix(c, overlay.apply(c, mx, my, v), cfg.overlay_opacity);
+		if (overlay && overlay.apply && overlay_opacity > 0) {
+			c = mix(c, overlay.apply(c, mx, my, v), overlay_opacity);
 		}
-		if (cfg.tint_opacity > 0) c = mix(c, tint, cfg.tint_opacity);
+		if (tint_opacity > 0) c = mix(c, tint, tint_opacity);
 		return c;
 	}
 	let pixels = new Uint8ClampedArray(width * height * 4);
@@ -183,7 +192,7 @@ export function buildRow(cfg) {
 
 	// front faces, with a bevel: light on top/left edges, dark on bottom/right edges
 	let bevel = cfg.bevel ? Math.max(1, Math.round(R / 4)) : 0;
-	let strength = cfg.bevel_strength ?? 0.35;
+	let strength = num(cfg.bevel_strength, 0.35, 0, 1);
 	for (let ty = 0; ty < h * R; ty++) {
 		for (let tx = 0; tx < w * R; tx++) {
 			let c = surface(tx, ty);
