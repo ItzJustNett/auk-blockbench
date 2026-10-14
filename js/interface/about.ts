@@ -84,6 +84,8 @@ BARS.defineActions(() => {
 								</a>
 							</div>
 
+							<p class="auk_based_on"><b>Auk edition.</b> This is Auk Hosting's modified version of Blockbench, not the official app.
+								Based on Blockbench · <a class="open-in-browser" href="https://github.com/ItzJustNett/auk-blockbench">Source</a> (GPL-3.0)</p>
 							<p>Created by Jannis Petersen</p>
 							<p style="color: var(--color-subtle_text);">A free and open-source low-poly model editor. To make 3D art easy and accessible for everyone.
 								For all who enjoy stylized 3D art. For game developers, students, content creators, and for the Minecraft community.</p>

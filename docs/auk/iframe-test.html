@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<!-- Test page for "Save to Auk": iframes the editor and logs the messages it posts.
+     Serve this file from http://localhost:5199 (e.g. `python3 -m http.server 5199 -d docs/auk`)
+     while the editor runs on http://127.0.0.1:4280 (see AUK.md), then open
+     http://localhost:5199/iframe-test.html -->
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<title>Save to Auk test</title>
+	<style>
+		body { margin: 0; font: 14px system-ui, sans-serif; background: #15131a; color: #e8e6ee; display: flex; height: 100vh; }
+		iframe { flex: 1; border: 0; }
+		aside { width: 320px; overflow: auto; padding: 12px; box-sizing: border-box; border-left: 1px solid #333; }
+		.msg { margin: 0 0 12px; padding: 8px; background: #221f29; border-radius: 6px; }
+		.msg img { max-width: 100%; background: repeating-conic-gradient(#444 0 25%, #333 0 50%) 0 0 / 16px 16px; image-rendering: auto; }
+		code { color: #9fd3ff; }
+	</style>
+</head>
+<body>
+	<iframe id="editor"></iframe>
+	<aside>
+		<h3>Messages from the editor</h3>
+		<div id="log"></div>
+	</aside>
+	<script>
+		const EDITOR = new URLSearchParams(location.search).get('editor') || 'http://127.0.0.1:4280';
+		const frame = document.getElementById('editor');
+		frame.src = EDITOR + '/?auk_origin=' + encodeURIComponent(location.origin);
+		window.aukMessages = [];
+		window.addEventListener('message', event => {
+			if (event.origin !== new URL(EDITOR).origin) return; // only trust the editor
+			const data = event.data || {};
+			const entry = {type: data.type, kind: data.kind, width: data.width, height: data.height, bytes: data.png ? Math.round(data.png.length * 3 / 4) : 0};
+			window.aukMessages.push(Object.assign({png: data.png}, entry));
+			console.log('[auk-test] message', JSON.stringify(entry));
+			const div = document.createElement('div');
+			div.className = 'msg';
+			div.innerHTML = `<code>${data.type}</code> ${data.kind || ''} ${data.width || ''}${data.height ? '×' + data.height : ''}`;
+			if (data.type === 'auk:image' && typeof data.png === 'string') {
+				const img = new Image();
+				img.src = 'data:image/png;base64,' + data.png;
+				div.appendChild(img);
+			}
+			document.getElementById('log').prepend(div);
+		});
+	</script>
+</body>
+</html>

@@ -9,6 +9,7 @@ import { initializeDesktopApp, loadOpenWithBlockbenchFile } from "./desktop";
 import { AutoBackup } from "./auto_backup";
 import { initReferenceImages } from "./preview/reference_images";
 import { initCanvas } from "./preview/canvas";
+import { loadAukPlugins } from "./auk/index.js";
 
 Interface.page_wrapper = document.getElementById('page_wrapper');
 Interface.work_screen = document.getElementById('work_screen');
@@ -101,29 +102,6 @@ if (!Blockbench.isWeb || !Blockbench.isPWA) {
 	$.ajaxSetup({ cache: false });
 }
 
-if (Blockbench.startup_count == 1) {
-	try {
-		jQuery.ajax({
-			url: 'https://blckbn.ch/api/event/new_installation',
-			type: 'POST',
-			data: {}
-		})
-	} catch (err) {
-		console.error(err);
-	}
-}
-if (Blockbench.startup_count == 3) {
-	try {
-		jQuery.ajax({
-			url: 'https://blckbn.ch/api/event/recurring_user',
-			type: 'POST',
-			data: {}
-		})
-	} catch (err) {
-		console.error(err);
-	}
-}
-
 Blockbench.on('before_closing', (event) => {
 	if (!Blockbench.hasFlag('no_localstorage_saving')) {
 		Settings.saveLocalStorages()
@@ -170,6 +148,7 @@ localStorage.setItem('last_version', Blockbench.version);
 		}
 		proceeded = true;
 	}
+	loadAukPlugins();
 	loadInstalledPlugins().then(proceed);
 	let timeout = ExperimentalSettings.get('plugin_await_loading_timeout') ?? 2;
 	setTimeout(proceed, timeout * 1000);
