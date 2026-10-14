@@ -1,6 +1,7 @@
 /dist/
 /dist-electron/
-/docs/
+/docs/*
+!/docs/auk/
 /types/generated/
 .env
 .DS_store

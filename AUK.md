@@ -45,8 +45,25 @@ All Auk code lives in `js/auk/` and is loaded at startup by `js/boot_loader.js`
   `http://localhost:<port>` or `http://127.0.0.1:<port>` origin is accepted too, for development.
   Anything else is ignored and the action stays hidden. Messages are never posted to `"*"`.
 - "Based on Blockbench · Source" links on the start screen and in the About dialog.
-- `docs/auk/`: screenshots and test pages (`docs/auk/iframe-test.html` iframes the app and logs
-  the messages it receives).
+- `docs/auk/`: screenshots, renders and `iframe-test.html`, a page that iframes the app and logs
+  the messages it receives.
+
+## Trying it
+
+1. Start the dev server (above) and open http://127.0.0.1:4280/.
+2. Start screen > Minecraft > **Auk Title** > Create title, or File > New > Auk Title. Enter a title
+   and subtitle. Edit rows in the **Title Text** panel; add rows with **Add Text** (outliner toolbar,
+   panel button or Edit menu). Every change is one undo step; projects save as `.bbmodel`.
+3. Switch to **Render** (top right): Position Camera frames the title (angle, turn and field of
+   view sliders), pick the output size, background and anti-aliasing, then Render or Export PNG.
+   View > Position Camera and the Angles menu's "Title" preset work in Edit mode too.
+4. Save to Auk: `python3 -m http.server 5199 --bind 127.0.0.1 -d docs/auk`, open
+   http://localhost:5199/iframe-test.html, make a title in the iframe, then File > Save to Auk
+   (or the buttons in the Render panel). The right column shows each `auk:image` it received.
+
+Screenshots: `docs/auk/editor-title.png` (edit mode), `docs/auk/render-mode.png`,
+`docs/auk/title-render.png` and `docs/auk/title-render-2.png` (exported PNGs),
+`docs/auk/save-to-auk-iframe.png` and `docs/auk/save-to-auk-icon-64.png` (the iframe test).
 
 ## Title generator: clean-room rules
 
